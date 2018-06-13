@@ -11,7 +11,7 @@
 
 <meta name="author" content="Are Strom" />
 
-<meta name="date" content="2018-05-08" />
+<meta name="date" content="2018-06-13" />
 
 <title>Data Dictionary: spawning ground database</title>
 
@@ -223,7 +223,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Data Dictionary: <em>spawning ground</em> database</h1>
 <h4 class="author"><em>Are Strom</em></h4>
-<h4 class="date"><em>2018-05-08</em></h4>
+<h4 class="date"><em>2018-06-13</em></h4>
 
 </div>
 
@@ -254,6 +254,10 @@ div.tocify {
 <p>The carcass, live, and redd counts recorded in the <em>spawning_ground</em> database are the actual daily counts recorded by spawning ground survey crews. The data are collected using various survey protocols for anadromous and resident species. Public and private entities collect survey data, although WDFW and tribal co-manager staff collects most of the data.</p>
 <p>Escapement estimates are a major component of our assessment of the status (health) of each stock. Questions associated with run timing and distribution of stocks may be answered by analyzing the temporal and spatial data in the <em>spawning_ground</em> database.</p>
 <p>Biologists apply a range of models and formulas to spawning ground data in order to calculate abundance and escapement estimates. Outputs from these analyses are used to generate reports and stock assessments. Estimates can then subsequently be entered into associated databases such as <a href="http://apps.wdfw.wa.gov/salmonscape/">SalmonScape</a> or <a href="https://fortress.wa.gov/dfw/score/score/">SCoRE</a>.</p>
+</div>
+<div id="spatial-features" class="section level4">
+<h4>Spatial features</h4>
+<p>The new <em>spawning_ground</em> database allows for storing spatial data types. This can include point features such as survey end points and redd locations, stream or river linestrings, and polygons for lakes and watersheds. With proper permissions, users can connect directly to the database server using GIS tools such as <em>QGIS</em> to enter data, create, edit, or delete spatial features. When using <em>QGIS</em>, no additional middleware is required.</p>
 </div>
 <div id="notes-on-table-descriptions" class="section level4">
 <h4>Notes on table descriptions</h4>
@@ -286,8 +290,8 @@ div.tocify {
 </div>
 <div id="database-diagram" class="section level1">
 <h1>Database diagram</h1>
-<div id="htmlwidget-1e3b0b4a5c92590e45ae" style="width:850px;height:480px;" class="sankeyNetwork html-widget"></div>
-<script type="application/json" data-for="htmlwidget-1e3b0b4a5c92590e45ae">{"x":{"links":{"source":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,19,20,21,21,21,23,25,27,28,29,30,31,32,35,36,37,38,40,41,42,43,44,45,46,47,48,49,50,51,53,54,55,55,55,55,55,55,55,57,58,59,59,59,60,61,63,64,65,66,66,66,68,69,70,71,72,73,73,73,73,73,73,73,73,73,73,75,76,77,78,78,80,82,83,84,85,86,86,86,88,90,91],"target":[21,74,15,15,39,79,78,21,32,73,73,73,18,18,74,21,18,32,18,24,32,22,26,21,32,17,32,73,22,39,39,39,55,55,24,24,24,24,24,24,48,24,21,81,50,21,21,15,18,21,35,59,73,89,56,56,33,56,62,33,59,78,21,32,26,78,79,55,74,74,62,62,15,17,26,52,74,78,79,81,87,89,73,74,78,21,59,73,74,74,74,87,34,55,67,74,89,55],"value":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,6,6,6,2,2,2,2,2,2,2,6,6,2,2,2,2,2,2,2,2,2,2,2,2,2,6,2,2,2,6,6,6,6,6,6,6,2,2,6,6,6,2,2,2,2,2,2,2,2,2,2,2,2,2,6,6,6,6,6,6,6,6,6,6,2,2,2,6,6,2,2,2,2,2,2,2,2,2,2,2]},"nodes":{"name":["adipose_clip_status_lut","area_surveyed_lut","barrier_measurement_type_lut","barrier_type_lut","coordinate_capture_method_lut","count_type_lut","cwt_detection_method_lut","cwt_detection_status_lut","cwt_result_type_lut","data_review_status_lut","data_source_lut","data_source_unit_lut","disposition_lut","disposition_type_lut","fish_abundance_condition_lut","fish_barrier","fish_behavior_type_lut","fish_capture","fish_capture_event","fish_capture_status_lut","fish_condition_type_lut","fish_encounter","fish_length_measurement","fish_length_measurement_type_lut","fish_mark","fish_presence_type_lut","fish_species_presence","fish_status_lut","fish_trauma_type_lut","gear_performance_type_lut","gill_condition_type_lut","incomplete_survey_type_lut","individual_fish","individual_redd","lake","location_coordinates","location_error_correction_type_lut","location_error_type_lut","location_orientation_type_lut","location_source","location_type_lut","mark_color_lut","mark_orientation_lut","mark_placement_lut","mark_shape_lut","mark_size_lut","mark_status_lut","mark_type_category_lut","mark_type_lut","maturity_lut","mobile_device","mobile_device_type_lut","mobile_survey_form","mortality_type_lut","origin_lut","point_location","redd_confidence","redd_confidence_review_status_lut","redd_confidence_type_lut","redd_encounter","redd_shape_lut","redd_status_lut","redd_substrate","run_lut","sex_lut","spawn_condition_type_lut","species_lut","stream","stream_channel_type_lut","stream_condition_lut","stream_flow_type_lut","substrate_level_lut","substrate_type_lut","survey","survey_comment","survey_completion_status_lut","survey_count_condition_lut","survey_design_type_lut","survey_event","survey_intent","survey_method_lut","survey_mobile_device","survey_timing_lut","survey_visibility_type_lut","visibility_condition_lut","water_clarity_type_lut","waterbody_lut","waterbody_measurement","weather_type_lut","wildlife_encounter","wildlife_type_lut","wria_lut"],"group":["adipose_clip_status_lut","area_surveyed_lut","barrier_measurement_type_lut","barrier_type_lut","coordinate_capture_method_lut","count_type_lut","cwt_detection_method_lut","cwt_detection_status_lut","cwt_result_type_lut","data_review_status_lut","data_source_lut","data_source_unit_lut","disposition_lut","disposition_type_lut","fish_abundance_condition_lut","fish_barrier","fish_behavior_type_lut","fish_capture","fish_capture_event","fish_capture_status_lut","fish_condition_type_lut","fish_encounter","fish_length_measurement","fish_length_measurement_type_lut","fish_mark","fish_presence_type_lut","fish_species_presence","fish_status_lut","fish_trauma_type_lut","gear_performance_type_lut","gill_condition_type_lut","incomplete_survey_type_lut","individual_fish","individual_redd","lake","location_coordinates","location_error_correction_type_lut","location_error_type_lut","location_orientation_type_lut","location_source","location_type_lut","mark_color_lut","mark_orientation_lut","mark_placement_lut","mark_shape_lut","mark_size_lut","mark_status_lut","mark_type_category_lut","mark_type_lut","maturity_lut","mobile_device","mobile_device_type_lut","mobile_survey_form","mortality_type_lut","origin_lut","point_location","redd_confidence","redd_confidence_review_status_lut","redd_confidence_type_lut","redd_encounter","redd_shape_lut","redd_status_lut","redd_substrate","run_lut","sex_lut","spawn_condition_type_lut","species_lut","stream","stream_channel_type_lut","stream_condition_lut","stream_flow_type_lut","substrate_level_lut","substrate_type_lut","survey","survey_comment","survey_completion_status_lut","survey_count_condition_lut","survey_design_type_lut","survey_event","survey_intent","survey_method_lut","survey_mobile_device","survey_timing_lut","survey_visibility_type_lut","visibility_condition_lut","water_clarity_type_lut","waterbody_lut","waterbody_measurement","weather_type_lut","wildlife_encounter","wildlife_type_lut","wria_lut"]},"options":{"NodeID":"name","NodeGroup":"name","LinkGroup":null,"colourScale":"d3.scaleOrdinal(d3.schemeCategory20);","fontSize":12,"fontFamily":null,"nodeWidth":30,"nodePadding":10,"units":"","margin":{"top":null,"right":null,"bottom":null,"left":null},"iterations":32,"sinksRight":true}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-4f4b9ce8c70773cbd2e6" style="width:850px;height:480px;" class="sankeyNetwork html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4f4b9ce8c70773cbd2e6">{"x":{"links":{"source":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,20,21,22,22,22,24,26,28,29,30,31,32,33,36,37,38,39,41,42,43,44,45,46,47,48,49,50,51,52,54,55,56,56,56,56,56,56,56,58,59,60,60,60,61,62,64,65,66,67,67,67,69,70,71,72,73,74,74,74,74,74,74,74,74,74,74,76,77,78,79,79,81,83,84,85,86,87,87,87,89,91,92],"target":[22,33,75,16,16,40,80,79,22,33,74,74,74,19,19,75,22,19,33,19,25,33,23,27,22,33,18,33,74,23,40,40,40,56,56,25,25,25,25,25,25,49,25,22,82,51,22,22,16,19,22,36,60,74,90,57,57,34,57,63,34,60,79,22,33,27,79,80,56,75,75,63,63,16,18,27,53,75,79,80,82,88,90,74,75,79,22,60,74,75,75,75,88,35,56,68,75,90,56],"value":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,6,6,6,2,2,2,2,2,2,2,6,6,2,2,2,2,2,2,2,2,2,2,2,2,2,6,2,2,2,6,6,6,6,6,6,6,2,2,6,6,6,2,2,2,2,2,2,2,2,2,2,2,2,2,6,6,6,6,6,6,6,6,6,6,2,2,2,6,6,2,2,2,2,2,2,2,2,2,2,2]},"nodes":{"name":["adipose_clip_status_lut","age_code_lut","area_surveyed_lut","barrier_measurement_type_lut","barrier_type_lut","coordinate_capture_method_lut","count_type_lut","cwt_detection_method_lut","cwt_detection_status_lut","cwt_result_type_lut","data_review_status_lut","data_source_lut","data_source_unit_lut","disposition_lut","disposition_type_lut","fish_abundance_condition_lut","fish_barrier","fish_behavior_type_lut","fish_capture","fish_capture_event","fish_capture_status_lut","fish_condition_type_lut","fish_encounter","fish_length_measurement","fish_length_measurement_type_lut","fish_mark","fish_presence_type_lut","fish_species_presence","fish_status_lut","fish_trauma_type_lut","gear_performance_type_lut","gill_condition_type_lut","incomplete_survey_type_lut","individual_fish","individual_redd","lake","location_coordinates","location_error_correction_type_lut","location_error_type_lut","location_orientation_type_lut","location_source","location_type_lut","mark_color_lut","mark_orientation_lut","mark_placement_lut","mark_shape_lut","mark_size_lut","mark_status_lut","mark_type_category_lut","mark_type_lut","maturity_lut","mobile_device","mobile_device_type_lut","mobile_survey_form","mortality_type_lut","origin_lut","point_location","redd_confidence","redd_confidence_review_status_lut","redd_confidence_type_lut","redd_encounter","redd_shape_lut","redd_status_lut","redd_substrate","run_lut","sex_lut","spawn_condition_type_lut","species_lut","stream","stream_channel_type_lut","stream_condition_lut","stream_flow_type_lut","substrate_level_lut","substrate_type_lut","survey","survey_comment","survey_completion_status_lut","survey_count_condition_lut","survey_design_type_lut","survey_event","survey_intent","survey_method_lut","survey_mobile_device","survey_timing_lut","survey_visibility_type_lut","visibility_condition_lut","water_clarity_type_lut","waterbody_lut","waterbody_measurement","weather_type_lut","wildlife_encounter","wildlife_type_lut","wria_lut"],"group":["adipose_clip_status_lut","age_code_lut","area_surveyed_lut","barrier_measurement_type_lut","barrier_type_lut","coordinate_capture_method_lut","count_type_lut","cwt_detection_method_lut","cwt_detection_status_lut","cwt_result_type_lut","data_review_status_lut","data_source_lut","data_source_unit_lut","disposition_lut","disposition_type_lut","fish_abundance_condition_lut","fish_barrier","fish_behavior_type_lut","fish_capture","fish_capture_event","fish_capture_status_lut","fish_condition_type_lut","fish_encounter","fish_length_measurement","fish_length_measurement_type_lut","fish_mark","fish_presence_type_lut","fish_species_presence","fish_status_lut","fish_trauma_type_lut","gear_performance_type_lut","gill_condition_type_lut","incomplete_survey_type_lut","individual_fish","individual_redd","lake","location_coordinates","location_error_correction_type_lut","location_error_type_lut","location_orientation_type_lut","location_source","location_type_lut","mark_color_lut","mark_orientation_lut","mark_placement_lut","mark_shape_lut","mark_size_lut","mark_status_lut","mark_type_category_lut","mark_type_lut","maturity_lut","mobile_device","mobile_device_type_lut","mobile_survey_form","mortality_type_lut","origin_lut","point_location","redd_confidence","redd_confidence_review_status_lut","redd_confidence_type_lut","redd_encounter","redd_shape_lut","redd_status_lut","redd_substrate","run_lut","sex_lut","spawn_condition_type_lut","species_lut","stream","stream_channel_type_lut","stream_condition_lut","stream_flow_type_lut","substrate_level_lut","substrate_type_lut","survey","survey_comment","survey_completion_status_lut","survey_count_condition_lut","survey_design_type_lut","survey_event","survey_intent","survey_method_lut","survey_mobile_device","survey_timing_lut","survey_visibility_type_lut","visibility_condition_lut","water_clarity_type_lut","waterbody_lut","waterbody_measurement","weather_type_lut","wildlife_encounter","wildlife_type_lut","wria_lut"]},"options":{"NodeID":"name","NodeGroup":"name","LinkGroup":null,"colourScale":"d3.scaleOrdinal(d3.schemeCategory20);","fontSize":12,"fontFamily":null,"nodeWidth":30,"nodePadding":10,"units":"","margin":{"top":null,"right":null,"bottom":null,"left":null},"iterations":32,"sinksRight":true}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div id="survey" class="section level1">
 <h1>Survey</h1>
@@ -347,18 +351,18 @@ div.tocify {
 <td align="left">Status of data review (final, preliminary, etc.)</td>
 </tr>
 <tr class="odd">
-<td align="left">survey_start_location_id</td>
+<td align="left">upper_end_point_id</td>
 <td align="left">uuid</td>
 <td align="left">No</td>
 <td align="left">Foreign</td>
-<td align="left">Link to point_location table, describes start point</td>
+<td align="left">Link to point_location table, describes upper end point of survey</td>
 </tr>
 <tr class="even">
-<td align="left">survey_end_location_id</td>
+<td align="left">lower_end_point_id</td>
 <td align="left">uuid</td>
 <td align="left">No</td>
 <td align="left">Foreign</td>
-<td align="left">Link to point_location table, describes end point</td>
+<td align="left">Link to point_location table, describes lower end point of survey</td>
 </tr>
 <tr class="odd">
 <td align="left">survey_completion_status_id</td>
@@ -778,106 +782,111 @@ div.tocify {
 <td align="left">SWIN</td>
 </tr>
 <tr class="even">
+<td align="left">068926b5-9f51-41d1-ba10-642667014284</td>
+<td align="left">Tacoma Power</td>
+<td align="left">TACP</td>
+</tr>
+<tr class="odd">
 <td align="left">62630826-a519-48fb-9ea3-12c6f0f04576</td>
 <td align="left">The Nature Conservancy</td>
 <td align="left">TNC</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">dc0e51c6-f49f-4c68-abaa-814b3c5608a6</td>
 <td align="left">Tulalip Tribe</td>
 <td align="left">TULA</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">82659ab1-07fa-4cf2-94ad-730e65f19ba0</td>
 <td align="left">Umatilla Tribe</td>
 <td align="left">UMAT</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">e347cd67-8362-4a34-9fba-11a569dd625d</td>
 <td align="left">University of Washington</td>
 <td align="left">UW</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">08326a99-f813-4653-b516-c1d97cb37a20</td>
 <td align="left">Unknown</td>
 <td align="left">UNK</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">81fae5c4-bd2e-48fc-abc7-abce30905cbb</td>
 <td align="left">Upper Skagit (Skagit System Co-op) Tribe</td>
 <td align="left">USSC</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">536960e4-b8b9-4096-95f2-81d4aff52bf6</td>
 <td align="left">Upper Skagit Tribe</td>
 <td align="left">USIT</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">ddd772e1-27e1-4b49-b64e-4838237a916a</td>
 <td align="left">US Fish and Wildlife Service</td>
 <td align="left">USFWS</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">486cdb69-36ca-4755-af1f-a6cd89d63f04</td>
 <td align="left">US Forest Service</td>
 <td align="left">USFS</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">1d65fbdc-f92f-4e88-8a9d-9d3c89cfc31f</td>
 <td align="left">Volunteer-WDFW</td>
 <td align="left">VOL</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">0d2ff02c-1c41-409f-b9e4-c4daf018a03e</td>
 <td align="left">Warm Springs Tribe</td>
 <td align="left">WARM</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">67db455c-1d40-4b20-9c6c-7696bd9cea84</td>
 <td align="left">Washington Conservation Corp</td>
 <td align="left">WCC</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">c40563fa-efce-4cac-a2e3-6223a5e24030</td>
 <td align="left">Washington Department of Fish and Wildlife</td>
 <td align="left">WDFW</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">15c063f3-d91b-487a-a4f1-d6fbc77a0a68</td>
 <td align="left">Washington Department of Game (historic)</td>
 <td align="left">WDG</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">7cfc0dfc-a800-4a46-bf33-46f980aecfa1</td>
 <td align="left">Washington Department of Natural Resources</td>
 <td align="left">DNR</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">6dd0ef5d-9903-4d65-99a8-02a9f6ec9796</td>
 <td align="left">Washington Department of Wildlife (historic)</td>
 <td align="left">WDW</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">feaa266d-8bf6-4527-813c-1c3a3161db70</td>
 <td align="left">WDFW and Muckleshoot Tribe combined</td>
 <td align="left">WDFW &amp; MUCK</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">d5a2de2f-f6ef-4c5c-a433-4701095f9a6f</td>
 <td align="left">Whatcom Chapter of Trout Unlimited</td>
 <td align="left">TU</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">68230c4e-2db2-4f59-a293-793b1681d0a3</td>
 <td align="left">Wild Fish Conservancy</td>
 <td align="left">WFC</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">f42db7fc-e6ad-4d8b-a0a5-26c98fe6089f</td>
 <td align="left">Willapa Alliance</td>
 <td align="left">WILLA</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">58395bef-2879-480c-b02a-1b84aa331e56</td>
 <td align="left">Yakama Tribe</td>
 <td align="left">YAKA</td>
@@ -2181,20 +2190,6 @@ div.tocify {
 <td align="left">No</td>
 <td align="left">Foreign</td>
 <td align="left">Link to point_location table</td>
-</tr>
-<tr class="odd">
-<td align="left">longitude</td>
-<td align="left">numeric (14, 9)</td>
-<td align="left">No</td>
-<td align="left"></td>
-<td align="left">Longitude in decimal degrees, EPSG:4326</td>
-</tr>
-<tr class="even">
-<td align="left">latitude</td>
-<td align="left">numeric (12, 9)</td>
-<td align="left">No</td>
-<td align="left"></td>
-<td align="left">Latitude in decimal degrees, EPSG:4326</td>
 </tr>
 <tr class="odd">
 <td align="left">horizontal_accuracy</td>
@@ -7299,95 +7294,81 @@ div.tocify {
 <td align="left">CWT analysis result (decoded tag, no tag, etc.)</td>
 </tr>
 <tr class="even">
+<td align="left">age_code_id</td>
+<td align="left">uuid</td>
+<td align="left">Yes</td>
+<td align="left">Foreign</td>
+<td align="left">Age assessment categories as determined by the age laboratory</td>
+</tr>
+<tr class="odd">
 <td align="left">percent_eggs_retained</td>
 <td align="left">int4</td>
 <td align="left">Yes</td>
 <td align="left"></td>
 <td align="left">Estimated percent of eggs retained</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">eggs_retained_gram</td>
 <td align="left">numeric (4, 1)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
 <td align="left">Weight of retained eggs</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">eggs_retained_number</td>
 <td align="left">int4</td>
 <td align="left">Yes</td>
 <td align="left"></td>
 <td align="left">Estimated number of eggs retained</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">fish_sample_number</td>
 <td align="left">varchar (40)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
 <td align="left">Carcass sample number</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">scale_sample_card_number</td>
 <td align="left">varchar (40)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
 <td align="left">Scale card number</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">scale_sample_position_number</td>
 <td align="left">varchar (40)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
 <td align="left">Position number on scale card</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">cwt_snout_sample_number</td>
 <td align="left">varchar (40)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
 <td align="left">Coded-wire tag snout sample number</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">cwt_tag_code</td>
 <td align="left">varchar (10)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
 <td align="left">Decoded coded-wire tag value</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">genetic_sample_number</td>
 <td align="left">varchar (40)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
 <td align="left">Genetic sample number</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">otolith_sample_number</td>
 <td align="left">varchar (40)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
 <td align="left">Otolith sample number</td>
-</tr>
-<tr class="even">
-<td align="left">total_age</td>
-<td align="left">int4</td>
-<td align="left">Yes</td>
-<td align="left"></td>
-<td align="left">Total age of fish</td>
-</tr>
-<tr class="odd">
-<td align="left">fresh_water_age</td>
-<td align="left">int4</td>
-<td align="left">Yes</td>
-<td align="left"></td>
-<td align="left">Total fresh water age of fish</td>
-</tr>
-<tr class="even">
-<td align="left">age_code</td>
-<td align="left">varchar (15)</td>
-<td align="left">Yes</td>
-<td align="left"></td>
-<td align="left">Age code determined by age laboratory</td>
 </tr>
 <tr class="odd">
 <td align="left">comment_text</td>
@@ -7876,6 +7857,159 @@ div.tocify {
 <td align="left">10</td>
 <td align="left">Not applicable</td>
 <td align="left">Not applicable</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="age_code_lut" class="section level3">
+<h3>age_code_lut</h3>
+<div id="age-assessment-categories-as-determined-by-fish-age-laboratory" class="section level5">
+<h5><em>Age assessment categories as determined by fish age laboratory</em></h5>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Column name</th>
+<th align="left">Data type</th>
+<th align="left">Nullable?</th>
+<th align="left">Key</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">age_code_id</td>
+<td align="left">uuid</td>
+<td align="left">No</td>
+<td align="left">Primary</td>
+<td align="left">Universally unique primary key</td>
+</tr>
+<tr class="even">
+<td align="left">european_age_code</td>
+<td align="left">varchar (15)</td>
+<td align="left">No</td>
+<td align="left"></td>
+<td align="left">European age code, used to characterize fish age</td>
+</tr>
+<tr class="odd">
+<td align="left">gilbert_rich_age_code</td>
+<td align="left">varchar (5)</td>
+<td align="left">Yes</td>
+<td align="left"></td>
+<td align="left">Gilbert-Rich age code, used to characterize fish age</td>
+</tr>
+<tr class="even">
+<td align="left">fresh_water_annuli</td>
+<td align="left">int4</td>
+<td align="left">Yes</td>
+<td align="left"></td>
+<td align="left">The number of annuli deposited while in fresh water</td>
+</tr>
+<tr class="odd">
+<td align="left">maiden_salt_water_annuli</td>
+<td align="left">int4</td>
+<td align="left">Yes</td>
+<td align="left"></td>
+<td align="left">The number of annuli deposited during first migration into salt water</td>
+</tr>
+<tr class="even">
+<td align="left">total_salt_water_annuli</td>
+<td align="left">int4</td>
+<td align="left">Yes</td>
+<td align="left"></td>
+<td align="left">The total number of annuli deposited while in salt water</td>
+</tr>
+<tr class="odd">
+<td align="left">age_at_spawning</td>
+<td align="left">int4</td>
+<td align="left">Yes</td>
+<td align="left"></td>
+<td align="left">Age of the fish at time of spawning</td>
+</tr>
+<tr class="even">
+<td align="left">prior_spawn_event_count</td>
+<td align="left">int4</td>
+<td align="left">Yes</td>
+<td align="left"></td>
+<td align="left">The estimated number of times the fish has spawned previously</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th align="left">european_age_code</th>
+<th align="left">gilbert_rich_age_code</th>
+<th align="right">fresh_water_annuli</th>
+<th align="right">maiden_salt_water_annuli</th>
+<th align="right">total_salt_water_annuli</th>
+<th align="right">age_at_spawning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">0.0</td>
+<td align="left">1₁</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">0.1</td>
+<td align="left">2₁</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">1.0</td>
+<td align="left">2₂</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">0.2</td>
+<td align="left">3₁</td>
+<td align="right">0</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="left">1.1</td>
+<td align="left">3₂</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="left">2.0</td>
+<td align="left">3₃</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="left">0.3</td>
+<td align="left">4₁</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="left">1.2</td>
+<td align="left">4₂</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">4</td>
 </tr>
 </tbody>
 </table>
