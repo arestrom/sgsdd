@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Are Strom" />
 
-<meta name="date" content="2019-07-15" />
+<meta name="date" content="2020-12-02" />
 
 <title>Data Dictionary: spawning ground database</title>
 
@@ -1542,13 +1542,38 @@ color: #d14;
           theseArgs = theseArgs.concat([task.data]);
           task = task.code;
         }
-        var taskFunc = eval("(" + task + ")");
+        var taskFunc = tryEval(task);
         if (typeof(taskFunc) !== "function") {
           throw new Error("Task must be a function! Source:\n" + task);
         }
         taskFunc.apply(target, theseArgs);
       });
     }
+  }
+
+  // Attempt eval() both with and without enclosing in parentheses.
+  // Note that enclosing coerces a function declaration into
+  // an expression that eval() can parse
+  // (otherwise, a SyntaxError is thrown)
+  function tryEval(code) {
+    var result = null;
+    try {
+      result = eval(code);
+    } catch(error) {
+      if (!error instanceof SyntaxError) {
+        throw error;
+      }
+      try {
+        result = eval("(" + code + ")");
+      } catch(e) {
+        if (e instanceof SyntaxError) {
+          throw error;
+        } else {
+          throw e;
+        }
+      }
+    }
+    return result;
   }
 
   function initSizing(el) {
@@ -1943,17 +1968,56 @@ color: #d14;
     invokePostRenderHandlers();
   }
 
-  // Wait until after the document has loaded to render the widgets.
+
+  function has_jQuery3() {
+    if (!window.jQuery) {
+      return false;
+    }
+    var $version = window.jQuery.fn.jquery;
+    var $major_version = parseInt($version.split(".")[0]);
+    return $major_version >= 3;
+  }
+
+  /*
+  / Shiny 1.4 bumped jQuery from 1.x to 3.x which means jQuery's
+  / on-ready handler (i.e., $(fn)) is now asyncronous (i.e., it now
+  / really means $(setTimeout(fn)).
+  / https://jquery.com/upgrade-guide/3.0/#breaking-change-document-ready-handlers-are-now-asynchronous
+  /
+  / Since Shiny uses $() to schedule initShiny, shiny>=1.4 calls initShiny
+  / one tick later than it did before, which means staticRender() is
+  / called renderValue() earlier than (advanced) widget authors might be expecting.
+  / https://github.com/rstudio/shiny/issues/2630
+  /
+  / For a concrete example, leaflet has some methods (e.g., updateBounds)
+  / which reference Shiny methods registered in initShiny (e.g., setInputValue).
+  / Since leaflet is privy to this life-cycle, it knows to use setTimeout() to
+  / delay execution of those methods (until Shiny methods are ready)
+  / https://github.com/rstudio/leaflet/blob/18ec981/javascript/src/index.js#L266-L268
+  /
+  / Ideally widget authors wouldn't need to use this setTimeout() hack that
+  / leaflet uses to call Shiny methods on a staticRender(). In the long run,
+  / the logic initShiny should be broken up so that method registration happens
+  / right away, but binding happens later.
+  */
+  function maybeStaticRenderLater() {
+    if (shinyMode && has_jQuery3()) {
+      window.jQuery(window.HTMLWidgets.staticRender);
+    } else {
+      window.HTMLWidgets.staticRender();
+    }
+  }
+
   if (document.addEventListener) {
     document.addEventListener("DOMContentLoaded", function() {
       document.removeEventListener("DOMContentLoaded", arguments.callee, false);
-      window.HTMLWidgets.staticRender();
+      maybeStaticRenderLater();
     }, false);
   } else if (document.attachEvent) {
     document.attachEvent("onreadystatechange", function() {
       if (document.readyState === "complete") {
         document.detachEvent("onreadystatechange", arguments.callee);
-        window.HTMLWidgets.staticRender();
+        maybeStaticRenderLater();
       }
     });
   }
@@ -2041,7 +2105,7 @@ color: #d14;
       if (o !== null && typeof o === "object" && part in o) {
         if (i == (l - 1)) { // if we are at the end of the line then evalulate
           if (typeof o[part] === "string")
-            o[part] = eval("(" + o[part] + ")");
+            o[part] = tryEval(o[part]);
         } else { // otherwise continue to next embedded object
           o = o[part];
         }
@@ -2814,6 +2878,15 @@ return function(){for(var n=0,e=0;e<t;++e)n+=Math.random();return n}},um=functio
 });
 </script>
 
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+      </style>
+
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
   pre:not([class]) {
@@ -2874,7 +2947,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -2936,6 +3008,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -2948,48 +3021,9 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
-
-<script>
-$(document).ready(function ()  {
-
-    // move toc-ignore selectors from section div to header
-    $('div.section.toc-ignore')
-        .removeClass('toc-ignore')
-        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
-
-    // establish options
-    var options = {
-      selectors: "h1,h2,h3,h4",
-      theme: "bootstrap3",
-      context: '.toc-content',
-      hashGenerator: function (text) {
-        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
-      },
-      ignoreSelector: ".toc-ignore",
-      scrollTo: 0
-    };
-    options.showAndHide = true;
-    options.smoothScroll = true;
-
-    // tocify
-    var toc = $("#TOC").tocify(options).data("toc-tocify");
-});
-</script>
 
 <style type="text/css">
 
@@ -3003,6 +3037,12 @@ $(document).ready(function ()  {
 }
 }
 
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
 
 .toc-content {
   padding-left: 30px;
@@ -3075,7 +3115,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Data Dictionary: <em>spawning ground</em> database</h1>
 <h4 class="author">Are Strom</h4>
-<h4 class="date">2019-07-15</h4>
+<h4 class="date">2020-12-02</h4>
 
 </div>
 
@@ -3139,14 +3179,21 @@ div.tocify {
 </div>
 <div id="database-diagram" class="section level1">
 <h1>Database diagram</h1>
-<div id="htmlwidget-37b5ba3ca370883cfb68" style="width:850px;height:480px;" class="sankeyNetwork html-widget"></div>
-<script type="application/json" data-for="htmlwidget-37b5ba3ca370883cfb68">{"x":{"links":{"source":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,20,21,22,22,22,24,26,28,29,30,31,32,33,36,36,36,36,36,36,36,36,36,37,38,39,40,42,43,44,45,46,47,48,49,50,51,53,54,55,57,58,59,62,63,64,65,65,65,66,67,69,70,71,72,72,72,74,75,76,78,79,80,80,80,80,80,80,80,80,80,80,82,83,84,85,86,86,88,90,91,92,93,94,94,94,96,97],"target":[22,33,81,16,16,41,87,86,22,33,80,80,80,19,19,81,22,19,33,19,25,33,23,27,22,33,18,33,80,23,16,19,22,37,52,60,65,77,80,41,41,41,36,36,25,25,25,25,25,25,50,25,22,52,89,54,22,60,22,61,61,34,34,61,68,34,65,86,22,33,27,86,87,36,81,81,68,68,16,18,27,56,60,81,86,87,89,95,80,81,86,81,22,65,80,81,81,81,95,35,36,73,81,36],"value":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,6,6,6,2,2,2,2,2,2,2,6,6,6,6,6,6,6,6,6,6,6,2,2,2,2,2,2,2,2,2,2,2,2,2,2,6,2,2,2,2,2,2,2,6,6,6,2,2,2,2,2,2,2,2,2,2,2,2,2,6,6,6,6,6,6,6,6,6,6,2,2,2,2,6,6,2,2,2,2,2,2,2,2,2,2]},"nodes":{"name":["adipose_clip_status_lut","age_code_lut","area_surveyed_lut","barrier_measurement_type_lut","barrier_type_lut","coordinate_capture_method_lut","count_type_lut","cwt_detection_method_lut","cwt_detection_status_lut","cwt_result_type_lut","data_review_status_lut","data_source_lut","data_source_unit_lut","disposition_lut","disposition_type_lut","fish_abundance_condition_lut","fish_barrier","fish_behavior_type_lut","fish_capture","fish_capture_event","fish_capture_status_lut","fish_condition_type_lut","fish_encounter","fish_length_measurement","fish_length_measurement_type_lut","fish_mark","fish_presence_type_lut","fish_species_presence","fish_status_lut","fish_trauma_type_lut","gear_performance_type_lut","gill_condition_type_lut","incomplete_survey_type_lut","individual_fish","individual_redd","lake","location","location_coordinates","location_error_correction_type_lut","location_error_type_lut","location_orientation_type_lut","location_source","location_type_lut","mark_color_lut","mark_orientation_lut","mark_placement_lut","mark_shape_lut","mark_size_lut","mark_status_lut","mark_type_category_lut","mark_type_lut","maturity_lut","media_location","media_type_lut","mobile_device","mobile_device_type_lut","mobile_survey_form","mortality_type_lut","observation_type_lut","origin_lut","other_observation","redd_confidence","redd_confidence_review_status_lut","redd_confidence_type_lut","redd_dewatered_type_lut","redd_encounter","redd_shape_lut","redd_status_lut","redd_substrate","run_lut","sex_lut","spawn_condition_type_lut","species_lut","stream","stream_channel_type_lut","stream_condition_lut","stream_flow_type_lut","stream_section","substrate_level_lut","substrate_type_lut","survey","survey_comment","survey_completion_status_lut","survey_count_condition_lut","survey_design_type_lut","survey_direction_lut","survey_event","survey_intent","survey_method_lut","survey_mobile_device","survey_timing_lut","visibility_condition_lut","visibility_type_lut","water_clarity_type_lut","waterbody_lut","waterbody_measurement","weather_type_lut","wria_lut"],"group":["adipose_clip_status_lut","age_code_lut","area_surveyed_lut","barrier_measurement_type_lut","barrier_type_lut","coordinate_capture_method_lut","count_type_lut","cwt_detection_method_lut","cwt_detection_status_lut","cwt_result_type_lut","data_review_status_lut","data_source_lut","data_source_unit_lut","disposition_lut","disposition_type_lut","fish_abundance_condition_lut","fish_barrier","fish_behavior_type_lut","fish_capture","fish_capture_event","fish_capture_status_lut","fish_condition_type_lut","fish_encounter","fish_length_measurement","fish_length_measurement_type_lut","fish_mark","fish_presence_type_lut","fish_species_presence","fish_status_lut","fish_trauma_type_lut","gear_performance_type_lut","gill_condition_type_lut","incomplete_survey_type_lut","individual_fish","individual_redd","lake","location","location_coordinates","location_error_correction_type_lut","location_error_type_lut","location_orientation_type_lut","location_source","location_type_lut","mark_color_lut","mark_orientation_lut","mark_placement_lut","mark_shape_lut","mark_size_lut","mark_status_lut","mark_type_category_lut","mark_type_lut","maturity_lut","media_location","media_type_lut","mobile_device","mobile_device_type_lut","mobile_survey_form","mortality_type_lut","observation_type_lut","origin_lut","other_observation","redd_confidence","redd_confidence_review_status_lut","redd_confidence_type_lut","redd_dewatered_type_lut","redd_encounter","redd_shape_lut","redd_status_lut","redd_substrate","run_lut","sex_lut","spawn_condition_type_lut","species_lut","stream","stream_channel_type_lut","stream_condition_lut","stream_flow_type_lut","stream_section","substrate_level_lut","substrate_type_lut","survey","survey_comment","survey_completion_status_lut","survey_count_condition_lut","survey_design_type_lut","survey_direction_lut","survey_event","survey_intent","survey_method_lut","survey_mobile_device","survey_timing_lut","visibility_condition_lut","visibility_type_lut","water_clarity_type_lut","waterbody_lut","waterbody_measurement","weather_type_lut","wria_lut"]},"options":{"NodeID":"name","NodeGroup":"name","LinkGroup":null,"colourScale":"d3.scaleOrdinal(d3.schemeCategory20);","fontSize":12,"fontFamily":null,"nodeWidth":30,"nodePadding":10,"units":"","margin":{"top":null,"right":null,"bottom":null,"left":null},"iterations":32,"sinksRight":true}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-e3b7c452bbc0df7efcea" style="width:850px;height:480px;" class="sankeyNetwork html-widget"></div>
+<script type="application/json" data-for="htmlwidget-e3b7c452bbc0df7efcea">{"x":{"links":{"source":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,17,18,19,19,19,21,24,26,27,28,29,30,31,34,34,34,34,34,34,34,34,34,35,36,37,38,40,41,42,43,44,45,46,47,48,49,51,52,53,55,56,57,59,60,62,63,64,65,65,65,66,67,69,69,70,71,72,72,72,72,75,76,77,79,80,81,81,81,81,81,81,81,81,81,81,83,84,85,86,87,87,89,91,92,93,94,95,95,95,95,97,98],"target":[19,31,82,39,88,87,19,31,81,81,81,16,16,82,19,16,31,16,22,31,20,25,19,31,15,31,81,20,16,19,23,35,50,58,65,78,81,39,39,39,34,34,22,22,22,22,22,22,48,22,19,50,90,52,19,58,19,23,23,61,61,32,32,61,68,32,65,73,87,19,31,25,73,87,88,34,82,82,68,68,15,23,25,54,58,82,87,88,90,96,81,82,87,82,19,65,81,82,82,82,96,33,34,73,74,82,34],"value":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,6,6,6,2,2,2,2,2,2,2,6,6,6,6,6,6,6,6,6,6,6,2,2,2,2,2,2,2,2,2,2,2,2,2,2,6,2,2,2,2,2,2,2,2,2,6,6,6,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,6,6,6,6,6,6,6,6,6,6,2,2,2,2,6,6,2,2,2,2,2,2,2,2,2,2,2]},"nodes":{"name":["adipose_clip_status_lut","age_code_lut","area_surveyed_lut","coordinate_capture_method_lut","count_type_lut","cwt_detection_method_lut","cwt_detection_status_lut","cwt_result_type_lut","data_review_status_lut","data_source_lut","data_source_unit_lut","disposition_lut","disposition_type_lut","fish_abundance_condition_lut","fish_behavior_type_lut","fish_capture","fish_capture_event","fish_capture_status_lut","fish_condition_type_lut","fish_encounter","fish_length_measurement","fish_length_measurement_type_lut","fish_mark","fish_passage_feature","fish_presence_type_lut","fish_species_presence","fish_status_lut","fish_trauma_type_lut","gear_performance_type_lut","gill_condition_type_lut","incomplete_survey_type_lut","individual_fish","individual_redd","lake","location","location_coordinates","location_error_correction_type_lut","location_error_type_lut","location_orientation_type_lut","location_source","location_type_lut","mark_color_lut","mark_orientation_lut","mark_placement_lut","mark_shape_lut","mark_size_lut","mark_status_lut","mark_type_category_lut","mark_type_lut","maturity_lut","media_location","media_type_lut","mobile_device","mobile_device_type_lut","mobile_survey_form","mortality_type_lut","observation_type_lut","origin_lut","other_observation","passage_feature_type_lut","passage_measurement_type_lut","redd_confidence","redd_confidence_review_status_lut","redd_confidence_type_lut","redd_dewatered_type_lut","redd_encounter","redd_shape_lut","redd_status_lut","redd_substrate","run_lut","sex_lut","spawn_condition_type_lut","species_lut","stock_lut","stream","stream_channel_type_lut","stream_condition_lut","stream_flow_type_lut","stream_section","substrate_level_lut","substrate_type_lut","survey","survey_comment","survey_completion_status_lut","survey_count_condition_lut","survey_design_type_lut","survey_direction_lut","survey_event","survey_intent","survey_method_lut","survey_mobile_device","survey_timing_lut","visibility_condition_lut","visibility_type_lut","water_clarity_type_lut","waterbody_lut","waterbody_measurement","weather_type_lut","wria_lut"],"group":["adipose_clip_status_lut","age_code_lut","area_surveyed_lut","coordinate_capture_method_lut","count_type_lut","cwt_detection_method_lut","cwt_detection_status_lut","cwt_result_type_lut","data_review_status_lut","data_source_lut","data_source_unit_lut","disposition_lut","disposition_type_lut","fish_abundance_condition_lut","fish_behavior_type_lut","fish_capture","fish_capture_event","fish_capture_status_lut","fish_condition_type_lut","fish_encounter","fish_length_measurement","fish_length_measurement_type_lut","fish_mark","fish_passage_feature","fish_presence_type_lut","fish_species_presence","fish_status_lut","fish_trauma_type_lut","gear_performance_type_lut","gill_condition_type_lut","incomplete_survey_type_lut","individual_fish","individual_redd","lake","location","location_coordinates","location_error_correction_type_lut","location_error_type_lut","location_orientation_type_lut","location_source","location_type_lut","mark_color_lut","mark_orientation_lut","mark_placement_lut","mark_shape_lut","mark_size_lut","mark_status_lut","mark_type_category_lut","mark_type_lut","maturity_lut","media_location","media_type_lut","mobile_device","mobile_device_type_lut","mobile_survey_form","mortality_type_lut","observation_type_lut","origin_lut","other_observation","passage_feature_type_lut","passage_measurement_type_lut","redd_confidence","redd_confidence_review_status_lut","redd_confidence_type_lut","redd_dewatered_type_lut","redd_encounter","redd_shape_lut","redd_status_lut","redd_substrate","run_lut","sex_lut","spawn_condition_type_lut","species_lut","stock_lut","stream","stream_channel_type_lut","stream_condition_lut","stream_flow_type_lut","stream_section","substrate_level_lut","substrate_type_lut","survey","survey_comment","survey_completion_status_lut","survey_count_condition_lut","survey_design_type_lut","survey_direction_lut","survey_event","survey_intent","survey_method_lut","survey_mobile_device","survey_timing_lut","visibility_condition_lut","visibility_type_lut","water_clarity_type_lut","waterbody_lut","waterbody_measurement","weather_type_lut","wria_lut"]},"options":{"NodeID":"name","NodeGroup":"name","LinkGroup":null,"colourScale":"d3.scaleOrdinal(d3.schemeCategory20);","fontSize":12,"fontFamily":null,"nodeWidth":30,"nodePadding":10,"units":"","margin":{"top":null,"right":null,"bottom":null,"left":null},"iterations":32,"sinksRight":true}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div id="survey" class="section level1">
 <h1>Survey</h1>
 <div id="top-level-header-information-for-surveys" class="section level5">
 <h5><em>Top level header information for surveys</em></h5>
 <table>
+<colgroup>
+<col width="22%"></col>
+<col width="13%"></col>
+<col width="8%"></col>
+<col width="6%"></col>
+<col width="49%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -3296,7 +3343,12 @@ div.tocify {
 </tr>
 </tbody>
 </table>
-<table>
+<table style="width:100%;">
+<colgroup>
+<col width="36%"></col>
+<col width="47%"></col>
+<col width="16%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">data_source_id</th>
@@ -3321,209 +3373,219 @@ div.tocify {
 <td align="left">BC</td>
 </tr>
 <tr class="even">
+<td align="left">58dc8e9f-5d55-4341-a1c7-6ba2f429b791</td>
+<td align="left">Bellingham Technical College</td>
+<td align="left">BTC</td>
+</tr>
+<tr class="odd">
 <td align="left">68832d03-bbef-4411-8f14-9b07e031ba78</td>
 <td align="left">Chehalis Tribe</td>
 <td align="left">CHEH</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">2aa98d95-cef4-4a5a-a496-cdac7904feea</td>
 <td align="left">Chelan County Public Utility District</td>
 <td align="left">CCPUD</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">a9247276-c9bc-45a6-af2a-156b6c3ea3ed</td>
 <td align="left">Chinook Tribe</td>
 <td align="left">CHNK</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">f70f8dcb-aaed-4c1a-91b9-802be1cb3a06</td>
 <td align="left">City of Bellingham</td>
 <td align="left">COB</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">be860d61-ea50-49a5-9e94-c719ae8b248e</td>
 <td align="left">Colville Tribe</td>
 <td align="left">COLV</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">4ddd0997-e08d-4254-9644-b15b3824d44b</td>
 <td align="left">Cowlitz Tribe</td>
 <td align="left">COW</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">bf394ebd-abb2-4c89-83c6-e1e628f4b467</td>
 <td align="left">Duwamish Tribe</td>
 <td align="left">DUWA</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">bc9caff8-b233-4880-91c0-00bef00c0c9f</td>
 <td align="left">Fourth Corner Fly Fishers Club</td>
 <td align="left">FCFF</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">b7a5bc02-6c10-46c9-b216-5ccf73481e33</td>
 <td align="left">Hoh Tribe</td>
 <td align="left">HOH</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">2bcfc2fa-c21f-49d6-8221-165f49ee0e4e</td>
 <td align="left">Hood Canal Salmon Enhancement Group</td>
 <td align="left">HCSEG</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">6ba288e3-90dd-4e9e-8315-668acb82d2b7</td>
 <td align="left">Hosey and Assoc. Consultants</td>
 <td align="left">HAC</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">87d6c0f6-59cc-494b-9c32-1af771c42a17</td>
 <td align="left">Jamestown S’Klallam Tribe</td>
 <td align="left">JST</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">9f00ca91-5cb2-4925-a9e4-d78b73445fbf</td>
 <td align="left">Jones and Stokes Consultants</td>
 <td align="left">JSC</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">42739dae-bce4-49c3-969f-39cd07db7c4d</td>
 <td align="left">King County</td>
 <td align="left">KNGC</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">604a618e-a10d-4c94-850f-6356f03fe29a</td>
 <td align="left">Kitsap County</td>
 <td align="left">KC</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">37598612-5794-4b7e-9d39-453c13ce19b8</td>
 <td align="left">Kitsap Stream Team</td>
 <td align="left">KST</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">f4ba760f-87a5-438b-ad6a-e13ce5978759</td>
 <td align="left">Long Live the Kings</td>
 <td align="left">LLTK</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">9232e0c7-0021-4598-8941-4beb09146415</td>
 <td align="left">Lower Elwha Klallam Tribe</td>
 <td align="left">LEKT</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">ff12ecc5-1337-4aca-8e76-22561341ac9f</td>
 <td align="left">Lummi Tribe</td>
 <td align="left">LUMM</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">b53352e4-970a-4c20-bf8a-785bad44dd2a</td>
 <td align="left">Makah Tribe</td>
 <td align="left">MAK</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">52a63c49-f8a4-4e01-81fd-41f61a294bd1</td>
 <td align="left">Muckleshoot Tribe</td>
 <td align="left">MUCK</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">6cd2179d-3026-49e1-829f-ed6d1acc8a38</td>
 <td align="left">National Marine Fisheries Service</td>
 <td align="left">NMFS</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">6813bde4-e2b8-4ead-8330-2e8a5d0639c0</td>
 <td align="left">National Oceanic and Atmospheric Administration</td>
 <td align="left">NOAA</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">121142b7-c25c-4ead-b06f-d3f0222d483f</td>
 <td align="left">National Park Service</td>
 <td align="left">NPS</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">c7784bd0-b138-4fdc-8f50-5ca61bc1e3f3</td>
 <td align="left">Nez Perce Tribe</td>
 <td align="left">NEZ</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">94bcd95a-48d2-4b5f-8c29-4ea3395e9fff</td>
 <td align="left">Nisqually Tribe</td>
 <td align="left">NIT</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">c7f89920-60b9-44d9-8827-71bd904a17c5</td>
 <td align="left">Nooksack Salmon Enhancement Association</td>
 <td align="left">NSEA</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">84740898-df3b-4229-849c-643794071edb</td>
 <td align="left">Nooksack Tribe</td>
 <td align="left">NOOK</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">026bcbf2-88eb-4280-9d5f-4420ce4e01ce</td>
 <td align="left">North Olympic Salmon Coalition</td>
 <td align="left">NOSC</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">46acc453-e130-460a-a037-be3f9df97024</td>
 <td align="left">Northwest Watershed Institute</td>
 <td align="left">NWI</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">d5787f49-32aa-4da4-9cd5-3391b766fcef</td>
 <td align="left">Not applicable</td>
 <td align="left">na</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">954eea36-5fc2-4741-9006-f49ec1451ce6</td>
 <td align="left">Oregon Department of Fish and Wildlife</td>
 <td align="left">ODFW</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">8cb96d81-03e1-4201-8c55-7ba89d0cf84b</td>
 <td align="left">Pacific County</td>
 <td align="left">PACI</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">6d9b3af0-8161-4650-8237-62694d415342</td>
 <td align="left">Point No Point Treaty Council</td>
 <td align="left">PNPTC</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">ac1f08be-7df4-498e-9e50-94e1e9bdd2fe</td>
 <td align="left">Port Gamble S’Klallam Tribe</td>
 <td align="left">PGST</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">568b50ba-92cc-4db5-979b-44471c787898</td>
 <td align="left">Puget Sound Energy</td>
 <td align="left">PSE</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">b2cd183d-b29e-4de1-8fe0-0471740b6a90</td>
 <td align="left">Puyallup Tribe</td>
 <td align="left">PUY</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">dc900b02-8dd6-4d7f-ba95-f271f4c22d4b</td>
 <td align="left">Quileute Tribe</td>
 <td align="left">QUIL</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">f40af5fa-7f51-4594-87ec-fc9870c78c44</td>
 <td align="left">Quinault Tribe</td>
 <td align="left">QUIN</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">4f4b2b9e-e216-4709-8ecf-ae289d2b5262</td>
 <td align="left">R2 Resource Consultants</td>
 <td align="left">R2</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">c16645fd-6627-466e-93a8-e10ac33fb396</td>
 <td align="left">Samish Tribe</td>
 <td align="left">SAM</td>
+</tr>
+<tr class="even">
+<td align="left">0edc8f49-84cc-48da-ae90-ec1d96e06ef8</td>
+<td align="left">San Juan County Land Bank</td>
+<td align="left">SJCLB</td>
 </tr>
 <tr class="odd">
 <td align="left">7a13e856-560a-497d-bd43-cf436754c867</td>
@@ -3926,6 +3988,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="40%"></col>
+<col width="20%"></col>
+<col width="39%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">survey_method_id</th>
@@ -4045,6 +4112,10 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="46%"></col>
+<col width="53%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">data_review_status_id</th>
@@ -4067,6 +4138,10 @@ div.tocify {
 <tr class="even">
 <td align="left">4c76b6fe-494c-49eb-896a-91060698526f</td>
 <td align="left">Unknown</td>
+</tr>
+<tr class="odd">
+<td align="left">9fb4c2b0-6ffb-4f41-8c5f-fc468a1b783f</td>
+<td align="left">Final, contributes to SaSI stock estimate</td>
 </tr>
 </tbody>
 </table>
@@ -4104,6 +4179,10 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="33%"></col>
+<col width="66%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">survey_completion_status_id</th>
@@ -4126,6 +4205,10 @@ div.tocify {
 <tr class="even">
 <td align="left">d192b32e-0e4f-4719-9c9c-dec6593b1977</td>
 <td align="left">Completed survey</td>
+</tr>
+<tr class="odd">
+<td align="left">d1e36479-25fb-447e-a35f-b108f0200d07</td>
+<td align="left">Completed, but split survey. See concurrent surveys for full set of data.</td>
 </tr>
 </tbody>
 </table>
@@ -4190,6 +4273,10 @@ div.tocify {
 <td align="left">73e7bff9-8415-4c14-81df-d9b2d1f13d39</td>
 <td align="left">Other safety concerns</td>
 </tr>
+<tr class="even">
+<td align="left">e7e43583-184e-4931-afd5-9cb5c0f28f23</td>
+<td align="left">Stream conditions</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -4200,6 +4287,13 @@ div.tocify {
 <div id="data-associated-with-point-locations" class="section level5">
 <h5><em>Data associated with point locations</em></h5>
 <table>
+<colgroup>
+<col width="23%"></col>
+<col width="12%"></col>
+<col width="8%"></col>
+<col width="6%"></col>
+<col width="49%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -4295,6 +4389,13 @@ div.tocify {
 <div id="attributes-for-relevant-streams-and-lakes-in-wa-state" class="section level5">
 <h5><em>Attributes for relevant streams and lakes in WA State</em></h5>
 <table>
+<colgroup>
+<col width="21%"></col>
+<col width="12%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="49%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -4356,6 +4457,13 @@ div.tocify {
 <div id="water-resource-inventory-areas-watersheds-in-wa-state" class="section level5">
 <h5><em>Water Resource Inventory Areas (watersheds) in WA State</em></h5>
 <table>
+<colgroup>
+<col width="14%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="7%"></col>
+<col width="58%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -4845,32 +4953,32 @@ div.tocify {
 <td align="left">Wildlife encounter</td>
 </tr>
 <tr class="odd">
-<td align="left">ead419f2-0e72-4d41-9715-7833879b71a8</td>
-<td align="left">Unknown</td>
-</tr>
-<tr class="even">
 <td align="left">1fc3c17d-56a4-4881-aa13-7d756b5616c5</td>
 <td align="left">Trap location</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">8944c684-7cfc-44cf-a2d8-be66723c1ae0</td>
 <td align="left">Fish Barrier</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">0caa52b7-dfd7-4bf6-bd99-effb17099fd3</td>
 <td align="left">Reach boundary point</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">0e15f4e1-57a4-45e0-8ef7-f623627b03a8</td>
 <td align="left">Section break point</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">7f29a9de-712a-4b74-b9a9-533384b7fbf5</td>
 <td align="left">Media recording point</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">5c42badb-7204-4ab5-9866-69c36872519b</td>
 <td align="left">Stream section linestring</td>
+</tr>
+<tr class="odd">
+<td align="left">ead419f2-0e72-4d41-9715-7833879b71a8</td>
+<td align="left">Other</td>
 </tr>
 </tbody>
 </table>
@@ -4979,6 +5087,10 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="45%"></col>
+<col width="54%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">location_orientation_type_id</th>
@@ -5024,6 +5136,13 @@ div.tocify {
 <div id="spatial-table-holding-coordinates-when-available-for-location-records" class="section level5">
 <h5><em>Spatial table holding coordinates (when available) for location records</em></h5>
 <table>
+<colgroup>
+<col width="21%"></col>
+<col width="13%"></col>
+<col width="8%"></col>
+<col width="7%"></col>
+<col width="50%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5085,6 +5204,13 @@ div.tocify {
 <div id="polygons-for-relevant-lakes-in-wa-state" class="section level5">
 <h5><em>Polygons for relevant lakes in WA State</em></h5>
 <table>
+<colgroup>
+<col width="13%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="56%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5132,6 +5258,13 @@ div.tocify {
 <div id="line-geometry-for-relevant-streams-in-wa-state" class="section level5">
 <h5><em>Line geometry for relevant streams in WA State</em></h5>
 <table>
+<colgroup>
+<col width="12%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="62%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5179,6 +5312,13 @@ div.tocify {
 <div id="line-geometry-for-sections-of-streams-primarily-for-imw-surveys" class="section level5">
 <h5><em>Line geometry for sections of streams, primarily for IMW surveys</em></h5>
 <table>
+<colgroup>
+<col width="15%"></col>
+<col width="8%"></col>
+<col width="8%"></col>
+<col width="7%"></col>
+<col width="59%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5226,6 +5366,13 @@ div.tocify {
 <div id="boundaries-of-wdfw-fish-program-biologist-districts" class="section level5">
 <h5><em>Boundaries of WDFW Fish Program biologist districts</em></h5>
 <table>
+<colgroup>
+<col width="25%"></col>
+<col width="8%"></col>
+<col width="8%"></col>
+<col width="7%"></col>
+<col width="50%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5287,6 +5434,13 @@ div.tocify {
 <div id="boundaries-of-nhd-hydrologic-units-huc-12-and-greater" class="section level5">
 <h5><em>Boundaries of NHD Hydrologic units (HUC 12 and greater)</em></h5>
 <table>
+<colgroup>
+<col width="17%"></col>
+<col width="8%"></col>
+<col width="8%"></col>
+<col width="6%"></col>
+<col width="60%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5390,6 +5544,13 @@ div.tocify {
 <div id="methods-of-capture-and-errors-associated-with-point-locations" class="section level5">
 <h5><em>Methods of capture, and errors, associated with point locations</em></h5>
 <table>
+<colgroup>
+<col width="26%"></col>
+<col width="12%"></col>
+<col width="7%"></col>
+<col width="6%"></col>
+<col width="47%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5492,6 +5653,13 @@ div.tocify {
 <div id="methods-used-to-capture-point-location" class="section level5">
 <h5><em>Methods used to capture point location</em></h5>
 <table>
+<colgroup>
+<col width="28%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="44%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5519,6 +5687,10 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="31%"></col>
+<col width="68%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">coordinate_capture_method_id</th>
@@ -5593,6 +5765,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="37%"></col>
+<col width="25%"></col>
+<col width="38%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">location_error_type_id</th>
@@ -5630,6 +5807,13 @@ div.tocify {
 <div id="methods-used-to-correct-point-location-errors" class="section level5">
 <h5><em>Methods used to correct point location errors</em></h5>
 <table>
+<colgroup>
+<col width="33%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="39%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5664,6 +5848,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="22%"></col>
+<col width="20%"></col>
+<col width="56%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">location_error_correction_type_id</th>
@@ -5702,6 +5891,13 @@ div.tocify {
 <div id="identifies-where-to-retrieve-media-photo-video-audio-files-etc.-recorded-at-point-locations" class="section level5">
 <h5><em>Identifies where to retrieve media (photo, video, audio files, etc.) recorded at point locations</em></h5>
 <table>
+<colgroup>
+<col width="16%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="58%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5739,6 +5935,13 @@ div.tocify {
 <td align="left">No</td>
 <td align="left"></td>
 <td align="left">The secure file or web location where media files are stored</td>
+</tr>
+<tr class="odd">
+<td align="left">comment_text</td>
+<td align="left">text</td>
+<td align="left">Yes</td>
+<td align="left"></td>
+<td align="left"></td>
 </tr>
 </tbody>
 </table>
@@ -5815,6 +6018,13 @@ div.tocify {
 <div id="attributes-for-capture-type-surveys-traps-electrofishing" class="section level5">
 <h5><em>Attributes for capture type surveys (traps, electrofishing)</em></h5>
 <table>
+<colgroup>
+<col width="23%"></col>
+<col width="15%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="43%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5868,6 +6078,13 @@ div.tocify {
 <div id="categories-for-how-well-capture-gear-is-functioning" class="section level5">
 <h5><em>Categories for how well capture gear is functioning</em></h5>
 <table>
+<colgroup>
+<col width="28%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="45%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5902,6 +6119,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="27%"></col>
+<col width="22%"></col>
+<col width="50%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">gear_performance_type_id</th>
@@ -5940,11 +6162,18 @@ div.tocify {
 </div>
 </div>
 </div>
-<div id="fish_barrier" class="section level1">
-<h1>Fish_barrier</h1>
-<div id="attributes-for-fish-barriers-encountered-during-surveys" class="section level5">
-<h5><em>Attributes for fish barriers encountered during surveys</em></h5>
+<div id="fish_passage_feature" class="section level1">
+<h1>Fish_passage_feature</h1>
+<div id="attributes-for-fish-passage-features-encountered-during-surveys" class="section level5">
+<h5><em>Attributes for fish passage features encountered during surveys</em></h5>
 <table>
+<colgroup>
+<col width="23%"></col>
+<col width="14%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="45%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -5956,7 +6185,7 @@ div.tocify {
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">fish_barrier_id</td>
+<td align="left">fish_passage_feature_id</td>
 <td align="left">uuid</td>
 <td align="left">No</td>
 <td align="left">Primary</td>
@@ -5970,68 +6199,68 @@ div.tocify {
 <td align="left">Link to survey table</td>
 </tr>
 <tr class="odd">
-<td align="left">barrier_location_id</td>
+<td align="left">feature_location_id</td>
 <td align="left">uuid</td>
 <td align="left">No</td>
 <td align="left">Foreign</td>
-<td align="left">Link to location table, describes barrier location</td>
+<td align="left">Link to location table, describes feature location</td>
 </tr>
 <tr class="even">
-<td align="left">barrier_type_id</td>
+<td align="left">passage_feature_type_id</td>
 <td align="left">uuid</td>
 <td align="left">No</td>
 <td align="left">Foreign</td>
-<td align="left">Link to table listing barrier categories</td>
+<td align="left">Link to table listing passage feature categories</td>
 </tr>
 <tr class="odd">
-<td align="left">barrier_observed_datetime</td>
+<td align="left">feature_observed_datetime</td>
 <td align="left">timestamptz (6)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
-<td align="left">Time that barrier was observed</td>
+<td align="left">Time that feature was observed</td>
 </tr>
 <tr class="even">
-<td align="left">barrier_height_meter</td>
+<td align="left">feature_height_meter</td>
 <td align="left">numeric (4, 2)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
-<td align="left">Height of barrier in meters</td>
+<td align="left">Height of feature in meters</td>
 </tr>
 <tr class="odd">
-<td align="left">barrier_height_type_id</td>
+<td align="left">feature_height_type_id</td>
 <td align="left">uuid</td>
 <td align="left">No</td>
 <td align="left">Foreign</td>
-<td align="left">Link to barrier_measurement_type table</td>
+<td align="left">Link to feature_measurement_type table</td>
 </tr>
 <tr class="even">
 <td align="left">plunge_pool_depth_meter</td>
 <td align="left">numeric (4, 2)</td>
 <td align="left">Yes</td>
 <td align="left"></td>
-<td align="left">Depth of barrier plunge pool in meters</td>
+<td align="left">Depth of feature plunge pool in meters</td>
 </tr>
 <tr class="odd">
 <td align="left">plunge_pool_depth_type_id</td>
 <td align="left">uuid</td>
 <td align="left">No</td>
 <td align="left">Foreign</td>
-<td align="left">Link to barrier_measurement_type table</td>
+<td align="left">Link to feature_measurement_type table</td>
 </tr>
 <tr class="even">
 <td align="left">comment_text</td>
 <td align="left">text</td>
 <td align="left">Yes</td>
 <td align="left"></td>
-<td align="left">Additional comments on fish barrier</td>
+<td align="left">Additional comments on fish passage feature</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div id="barrier_type_lut" class="section level3">
-<h3>barrier_type_lut</h3>
-<div id="categories-for-types-of-barriers-encountered-during-surveys" class="section level5">
-<h5><em>Categories for types of barriers encountered during surveys</em></h5>
+<div id="passage_feature_type_lut" class="section level3">
+<h3>passage_feature_type_lut</h3>
+<div id="categories-for-types-of-passage-features-encountered-during-surveys" class="section level5">
+<h5><em>Categories for types of passage features encountered during surveys</em></h5>
 <table>
 <thead>
 <tr class="header">
@@ -6044,26 +6273,30 @@ div.tocify {
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">barrier_type_id</td>
+<td align="left">passage_feature_type_id</td>
 <td align="left">uuid</td>
 <td align="left">No</td>
 <td align="left">Primary</td>
 <td align="left">Universally unique primary key</td>
 </tr>
 <tr class="even">
-<td align="left">barrier_type_description</td>
+<td align="left">feature_type_description</td>
 <td align="left">text</td>
 <td align="left">No</td>
 <td align="left"></td>
-<td align="left">Description of barrier type</td>
+<td align="left">Description of passage feature type</td>
 </tr>
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="45%"></col>
+<col width="54%"></col>
+</colgroup>
 <thead>
 <tr class="header">
-<th align="left">barrier_type_id</th>
-<th align="left">barrier_type_description</th>
+<th align="left">passage_feature_type_id</th>
+<th align="left">feature_type_description</th>
 </tr>
 </thead>
 <tbody>
@@ -6099,15 +6332,34 @@ div.tocify {
 <td align="left">21b16ab6-8f54-4dee-b66a-ff97b7a21895</td>
 <td align="left">Screen</td>
 </tr>
+<tr class="odd">
+<td align="left">9f6d5a70-c524-4bd5-a4ae-24d4e161469b</td>
+<td align="left">Gradient</td>
+</tr>
+<tr class="even">
+<td align="left">dac047a6-aa00-4835-a195-bb339303c7cc</td>
+<td align="left">Stream descends subsurface. No surface flow.</td>
+</tr>
+<tr class="odd">
+<td align="left">5f46785f-6b9b-47f6-96eb-9092a6ac1bfa</td>
+<td align="left">Stream resurfaces</td>
+</tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="barrier_measurement_type_lut" class="section level3">
-<h3>barrier_measurement_type_lut</h3>
+<div id="passage_measurement_type_lut" class="section level3">
+<h3>passage_measurement_type_lut</h3>
 <div id="measurement-type-for-barrier-height-and-pool-depth" class="section level5">
 <h5><em>Measurement type for barrier height and pool depth</em></h5>
 <table>
+<colgroup>
+<col width="28%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="44%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -6119,7 +6371,7 @@ div.tocify {
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">barrier_measurement_type_id</td>
+<td align="left">passage_measurement_type_id</td>
 <td align="left">uuid</td>
 <td align="left">No</td>
 <td align="left">Primary</td>
@@ -6137,7 +6389,7 @@ div.tocify {
 <table>
 <thead>
 <tr class="header">
-<th align="left">barrier_measurement_type_id</th>
+<th align="left">passage_measurement_type_id</th>
 <th align="left">measurement_type_description</th>
 </tr>
 </thead>
@@ -6164,6 +6416,13 @@ div.tocify {
 <div id="data-on-species-presence-absence-observations" class="section level5">
 <h5><em>Data on species presence-absence observations</em></h5>
 <table>
+<colgroup>
+<col width="23%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="50%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -6271,7 +6530,15 @@ div.tocify {
 </tr>
 </tbody>
 </table>
-<table>
+<table style="width:100%;">
+<colgroup>
+<col width="31%"></col>
+<col width="11%"></col>
+<col width="22%"></col>
+<col width="11%"></col>
+<col width="12%"></col>
+<col width="10%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">species_id</th>
@@ -6348,6 +6615,14 @@ div.tocify {
 <td align="left"></td>
 </tr>
 <tr class="odd">
+<td align="left">9107c80b-9807-4142-a24b-66eb5a48edd0</td>
+<td align="left">BlhSp</td>
+<td align="left">Bullhead catfish spp.</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
 <td align="left">69b1a91a-14f0-427f-86a6-2d723f89b0d2</td>
 <td align="left">Ccat</td>
 <td align="left">Channel catfish</td>
@@ -6355,7 +6630,7 @@ div.tocify {
 <td align="left">punctatus</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">e42aa0fc-c591-4fab-8481-55b0df38dcb1</td>
 <td align="left">Chin</td>
 <td align="left">Chinook salmon</td>
@@ -6363,7 +6638,7 @@ div.tocify {
 <td align="left">tshawytscha</td>
 <td align="left"></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">69d1348b-7e8e-4232-981a-702eda20c9b1</td>
 <td align="left">Chum</td>
 <td align="left">Chum salmon</td>
@@ -6371,7 +6646,7 @@ div.tocify {
 <td align="left">keta</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">3fcc4740-ffe7-43a2-8143-af22051de397</td>
 <td align="left">CCut</td>
 <td align="left">Coastal cutthroat trout</td>
@@ -6379,7 +6654,7 @@ div.tocify {
 <td align="left">clarkii</td>
 <td align="left">clarkii</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">a0f5b3af-fa07-449c-9f02-14c5368ab304</td>
 <td align="left">Coho</td>
 <td align="left">Coho salmon</td>
@@ -6387,13 +6662,21 @@ div.tocify {
 <td align="left">kisutch</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">8ee93878-8d89-4cde-8645-3ed71a19a016</td>
 <td align="left">CCrp</td>
 <td align="left">Common carp</td>
 <td align="left">Cyprinus</td>
 <td align="left">carpio</td>
 <td align="left">carpio</td>
+</tr>
+<tr class="even">
+<td align="left">52d99857-91ea-4f12-975f-2636540ee360</td>
+<td align="left">Crpi</td>
+<td align="left">Crappie</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
 </tr>
 <tr class="odd">
 <td align="left">99791175-94d8-4b0b-bb15-85e85e649bae</td>
@@ -6444,6 +6727,14 @@ div.tocify {
 <td align="left"></td>
 </tr>
 <tr class="odd">
+<td align="left">7170086e-0763-41d5-b1e0-7d83db0b2c85</td>
+<td align="left">LmpSp</td>
+<td align="left">Lamprey, unknown species</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
 <td align="left">26488335-e8d0-4dbd-a698-5be91b5b28a0</td>
 <td align="left">LmBs</td>
 <td align="left">Largemouth bass</td>
@@ -6451,7 +6742,7 @@ div.tocify {
 <td align="left">salmoides</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">a7caf7c8-5169-47db-ab94-f96c220287be</td>
 <td align="left">LSSu</td>
 <td align="left">Largescale sucker</td>
@@ -6459,7 +6750,7 @@ div.tocify {
 <td align="left">macrocheilus</td>
 <td align="left"></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">b5af4dc2-ebb3-4a71-b94a-77bb3b1a3725</td>
 <td align="left">Masu</td>
 <td align="left">Masu salmon</td>
@@ -6467,7 +6758,7 @@ div.tocify {
 <td align="left">masou</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">53645e1f-1d48-46d9-a982-a32fe7291aaf</td>
 <td align="left">MWFs</td>
 <td align="left">Mountain whitefish</td>
@@ -6475,7 +6766,7 @@ div.tocify {
 <td align="left">williamsoni</td>
 <td align="left"></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">fa02bfed-dc74-4209-ab2a-f1ab244c88d1</td>
 <td align="left">Npik</td>
 <td align="left">Northern pike</td>
@@ -6483,7 +6774,7 @@ div.tocify {
 <td align="left">lucius</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">8218da4e-ce75-42f9-81ac-f4ee80ce4080</td>
 <td align="left">NPkm</td>
 <td align="left">Northern pikeminnow</td>
@@ -6491,7 +6782,7 @@ div.tocify {
 <td align="left">oregonensis</td>
 <td align="left"></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">2afac5a6-e3b9-4b37-911e-59b93240789d</td>
 <td align="left">PLmp</td>
 <td align="left">Pacific lamprey</td>
@@ -6499,7 +6790,7 @@ div.tocify {
 <td align="left">tridentata</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">d7ac0fb8-e4f4-4659-a221-65ba9e4055af</td>
 <td align="left">Pmth</td>
 <td align="left">Peamouth</td>
@@ -6507,7 +6798,7 @@ div.tocify {
 <td align="left">caurinus</td>
 <td align="left"></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">ab60e8c0-4772-4249-90da-071ffb689f85</td>
 <td align="left">Pink</td>
 <td align="left">Pink salmon</td>
@@ -6515,7 +6806,7 @@ div.tocify {
 <td align="left">gorbuscha</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">ca1dee5c-5bcc-49c5-8c67-c7ac8105bdbc</td>
 <td align="left">Psed</td>
 <td align="left">Pumpkinseed</td>
@@ -6523,7 +6814,7 @@ div.tocify {
 <td align="left">gibbosus</td>
 <td align="left"></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">8e5c06ee-80b8-4004-8d14-c220378353b9</td>
 <td align="left">RnBw</td>
 <td align="left">Rainbow trout</td>
@@ -6531,7 +6822,7 @@ div.tocify {
 <td align="left">mykiss</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">d4ffc92a-9b2f-4260-94ec-a28fd75ddcd0</td>
 <td align="left">RLmp</td>
 <td align="left">River lamprey</td>
@@ -6539,7 +6830,7 @@ div.tocify {
 <td align="left">ayresi</td>
 <td align="left"></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">9b881b87-ee50-4de3-a3e9-a16950b9f8be</td>
 <td align="left">Scul</td>
 <td align="left">Sculpin</td>
@@ -6547,7 +6838,7 @@ div.tocify {
 <td align="left">spp.</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">9ddfa4d4-8674-4eca-8d34-ab9bbeb06b11</td>
 <td align="left">SmBs</td>
 <td align="left">Smallmouth bass</td>
@@ -6555,7 +6846,7 @@ div.tocify {
 <td align="left">dolomieui</td>
 <td align="left"></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">ed78e286-78d9-451b-854a-e3b89b2d6fd6</td>
 <td align="left">Sock</td>
 <td align="left">Sockeye salmon</td>
@@ -6563,12 +6854,20 @@ div.tocify {
 <td align="left">nerka</td>
 <td align="left"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">aa9f07cf-91f8-4244-ad17-7530b8cd1ce1</td>
 <td align="left">Sthd</td>
 <td align="left">Steelhead trout</td>
 <td align="left">Oncorhynchus</td>
 <td align="left">mykiss</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">64ac6de1-dd81-48c2-b06a-f3417ff502cd</td>
+<td align="left">SuckSp</td>
+<td align="left">Sucker, unknown species</td>
+<td align="left"></td>
+<td align="left"></td>
 <td align="left"></td>
 </tr>
 <tr class="odd">
@@ -6671,6 +6970,10 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="39%"></col>
+<col width="60%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">fish_presence_type_id</th>
@@ -6704,6 +7007,13 @@ div.tocify {
 <div id="measurements-of-waterbody-attributes-captured-during-surveys" class="section level5">
 <h5><em>Measurements of waterbody attributes captured during surveys</em></h5>
 <table>
+<colgroup>
+<col width="30%"></col>
+<col width="14%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="37%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -6792,6 +7102,13 @@ div.tocify {
 <div id="description-of-water-clarity-measurement-type" class="section level5">
 <h5><em>Description of water clarity measurement type</em></h5>
 <table>
+<colgroup>
+<col width="27%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="46%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -6826,6 +7143,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="19%"></col>
+<col width="20%"></col>
+<col width="59%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">water_clarity_type_id</th>
@@ -6864,6 +7186,13 @@ div.tocify {
 <div id="comments-on-survey.-largely-derived-from-legacy-comment-codes" class="section level5">
 <h5><em>Comments on survey. Largely derived from legacy comment codes</em></h5>
 <table>
+<colgroup>
+<col width="25%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="49%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -7248,6 +7577,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="36%"></col>
+<col width="27%"></col>
+<col width="35%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">stream_flow_type_id</th>
@@ -7337,6 +7671,10 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="48%"></col>
+<col width="51%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">survey_count_condition_id</th>
@@ -7495,6 +7833,13 @@ div.tocify {
 <div id="factors-affecting-visibility-below-stream-surface-from-comment-codes" class="section level5">
 <h5><em>Factors affecting visibility below stream surface (from comment codes)</em></h5>
 <table>
+<colgroup>
+<col width="23%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="49%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -7598,6 +7943,13 @@ div.tocify {
 <div id="general-comments-on-survey-visibility" class="section level5">
 <h5><em>General comments on survey visibility</em></h5>
 <table>
+<colgroup>
+<col width="34%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="37%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -7632,6 +7984,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="25%"></col>
+<col width="23%"></col>
+<col width="51%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">visibility_type_id</th>
@@ -7756,6 +8113,13 @@ div.tocify {
 <div id="predetermined-intent-of-the-survey-in-terms-of-species-targeted-and-count-types-attempted-live-dead-redd" class="section level5">
 <h5><em>Predetermined intent of the survey in terms of species targeted and count types attempted (live, dead, redd)</em></h5>
 <table>
+<colgroup>
+<col width="17%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="55%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -7909,6 +8273,13 @@ div.tocify {
 <div id="stores-data-for-tracking-mobile-devices" class="section level5">
 <h5><em>Stores data for tracking mobile devices</em></h5>
 <table>
+<colgroup>
+<col width="26%"></col>
+<col width="15%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="41%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -8097,6 +8468,13 @@ div.tocify {
 <div id="ancillary-data-on-other-observations-during-survey" class="section level5">
 <h5><em>Ancillary data on other observations during survey</em></h5>
 <table>
+<colgroup>
+<col width="20%"></col>
+<col width="13%"></col>
+<col width="8%"></col>
+<col width="6%"></col>
+<col width="50%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -8309,6 +8687,18 @@ div.tocify {
 <td align="left">623acb24-ae3c-4c32-9be4-9e64ac0aa342</td>
 <td align="left">High water line</td>
 </tr>
+<tr class="odd">
+<td align="left">38f359db-e7ca-4bb2-8d98-db9885bf5794</td>
+<td align="left">Clarity pool</td>
+</tr>
+<tr class="even">
+<td align="left">a171d5a0-aba8-4c31-90e9-c4c5e60a8051</td>
+<td align="left">New survey bottom</td>
+</tr>
+<tr class="odd">
+<td align="left">08bca0d8-1c27-4d34-abeb-0f38e6a774ff</td>
+<td align="left">New survey top</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -8319,6 +8709,13 @@ div.tocify {
 <div id="species-level-data" class="section level5">
 <h5><em>Species level data</em></h5>
 <table>
+<colgroup>
+<col width="27%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="45%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -8434,6 +8831,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="26%"></col>
+<col width="16%"></col>
+<col width="57%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">survey_design_type_id</th>
@@ -8476,6 +8878,11 @@ div.tocify {
 <td align="left">4cfe3b27-7e26-4bd2-a634-b49f8355ded3</td>
 <td align="left">GRTS</td>
 <td align="left">Generalized Random Tessellation Stratified Sampling methodology</td>
+</tr>
+<tr class="even">
+<td align="left">92a9d3dd-b626-4a3d-bf0c-b22e7d357560</td>
+<td align="left">Broodstock</td>
+<td align="left">Broodstock</td>
 </tr>
 </tbody>
 </table>
@@ -8579,6 +8986,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="29%"></col>
+<col width="17%"></col>
+<col width="53%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">run_id</th>
@@ -8667,6 +9079,21 @@ div.tocify {
 <td align="left">Fall bright</td>
 <td align="left">Columbia River fall bright Chinook</td>
 </tr>
+<tr class="odd">
+<td align="left">d688dfbb-5efb-4fee-8666-5aee6671a557</td>
+<td align="left">Summer - Fall</td>
+<td align="left">Summer and fall run</td>
+</tr>
+<tr class="even">
+<td align="left">42683b67-637e-41bb-ad2b-91abab428142</td>
+<td align="left">Odd year</td>
+<td align="left">Odd year run</td>
+</tr>
+<tr class="odd">
+<td align="left">f153f551-47c1-4c82-a8cb-7f77a87f834f</td>
+<td align="left">Even year</td>
+<td align="left">Even year run</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -8677,6 +9104,13 @@ div.tocify {
 <div id="data-for-fish-encounters-includes-data-for-one-or-multiple-fish" class="section level5">
 <h5><em>Data for fish encounters, includes data for one or multiple fish</em></h5>
 <table>
+<colgroup>
+<col width="25%"></col>
+<col width="14%"></col>
+<col width="8%"></col>
+<col width="7%"></col>
+<col width="44%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -8937,6 +9371,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="21%"></col>
+<col width="15%"></col>
+<col width="63%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">maturity_id</th>
@@ -9060,6 +9499,10 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="46%"></col>
+<col width="53%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">cwt_detection_status_id</th>
@@ -9130,6 +9573,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="30%"></col>
+<col width="20%"></col>
+<col width="49%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">adipose_clip_status_id</th>
@@ -9211,6 +9659,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="25%"></col>
+<col width="18%"></col>
+<col width="56%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">fish_behavior_type_id</th>
@@ -9258,6 +9711,13 @@ div.tocify {
 <div id="how-did-fish-die-gear-encounter-handling-etc." class="section level5">
 <h5><em>How did fish die? (gear encounter, handling, etc.)</em></h5>
 <table>
+<colgroup>
+<col width="34%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="37%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -9292,6 +9752,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="30%"></col>
+<col width="27%"></col>
+<col width="42%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">mortality_type_id</th>
@@ -9330,6 +9795,13 @@ div.tocify {
 <div id="data-for-fish-encounters-during-capture-type-surveys-such-as-mark-recapture" class="section level5">
 <h5><em>Data for fish encounters during capture type surveys such as mark-recapture</em></h5>
 <table>
+<colgroup>
+<col width="21%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="52%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -9424,6 +9896,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="34%"></col>
+<col width="23%"></col>
+<col width="42%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">fish_capture_status_id</th>
@@ -9466,6 +9943,13 @@ div.tocify {
 <div id="what-happened-to-the-fish-after-capture-and-processing" class="section level5">
 <h5><em>What happened to the fish after capture and processing?</em></h5>
 <table>
+<colgroup>
+<col width="28%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="43%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -9500,6 +9984,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="32%"></col>
+<col width="19%"></col>
+<col width="48%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">disposition_type_id</th>
@@ -9553,6 +10042,11 @@ div.tocify {
 <td align="left">Returned</td>
 <td align="left">Fish returned to the trap</td>
 </tr>
+<tr class="even">
+<td align="left">24b51215-f7ea-4480-ba7d-436144969ac3</td>
+<td align="left">Carcass returned</td>
+<td align="left">Carcass checked and returned to stream</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -9603,6 +10097,12 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="29%"></col>
+<col width="14%"></col>
+<col width="12%"></col>
+<col width="44%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">disposition_id</th>
@@ -9700,6 +10200,13 @@ div.tocify {
 <div id="data-for-marks-and-tags-applied-to-fish" class="section level5">
 <h5><em>Data for marks and tags applied to fish</em></h5>
 <table>
+<colgroup>
+<col width="20%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="52%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -10026,12 +10533,12 @@ div.tocify {
 <td align="left">Applied</td>
 </tr>
 <tr class="even">
-<td align="left">cb1dfe91-a782-4cbf-83c9-299137a5df6e</td>
-<td align="left">Missing</td>
-</tr>
-<tr class="odd">
 <td align="left">777753af-df58-4ca3-b4dd-696c52632e36</td>
 <td align="left">Not applicable</td>
+</tr>
+<tr class="odd">
+<td align="left">cb1dfe91-a782-4cbf-83c9-299137a5df6e</td>
+<td align="left">Not present</td>
 </tr>
 <tr class="even">
 <td align="left">68e174c7-ea47-4084-a567-bd33b241f94e</td>
@@ -10050,6 +10557,13 @@ div.tocify {
 <div id="orientation-of-mark-or-tag-right-left-etc." class="section level5">
 <h5><em>Orientation of mark or tag (right, left, etc.)</em></h5>
 <table>
+<colgroup>
+<col width="28%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="43%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -10536,6 +11050,13 @@ div.tocify {
 <div id="data-for-individual-fish" class="section level5">
 <h5><em>Data for individual fish</em></h5>
 <table>
+<colgroup>
+<col width="23%"></col>
+<col width="12%"></col>
+<col width="8%"></col>
+<col width="6%"></col>
+<col width="50%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -10687,6 +11208,13 @@ div.tocify {
 <div id="status-of-fish-in-terms-of-deterioration" class="section level5">
 <h5><em>Status of fish in terms of deterioration</em></h5>
 <table>
+<colgroup>
+<col width="34%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="37%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -10721,6 +11249,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="24%"></col>
+<col width="21%"></col>
+<col width="54%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">fish_condition_type_id</th>
@@ -10827,6 +11360,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="23%"></col>
+<col width="18%"></col>
+<col width="57%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">fish_trauma_type_id</th>
@@ -10981,6 +11519,13 @@ div.tocify {
 <div id="spawning-condition-of-fish-pre-post-etc." class="section level5">
 <h5><em>Spawning condition of fish (pre, post, etc.)</em></h5>
 <table>
+<colgroup>
+<col width="34%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="37%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11015,6 +11560,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="19%"></col>
+<col width="17%"></col>
+<col width="62%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">spawn_condition_type_id</th>
@@ -11058,6 +11608,11 @@ div.tocify {
 <td align="left">Post-spawn condition - partial</td>
 <td align="left">Fish in post-spawn condition, with some eggs missing</td>
 </tr>
+<tr class="even">
+<td align="left">ccfde24b-df29-4d40-ae67-bcfea77be4de</td>
+<td align="left">Spawn condition - full</td>
+<td align="left">Fish in spawning condition, full of eggs</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -11067,6 +11622,13 @@ div.tocify {
 <div id="result-of-cwt-analysis-decoded-tag-no-tag-etc." class="section level5">
 <h5><em>Result of CWT analysis (decoded tag, no tag, etc.)</em></h5>
 <table>
+<colgroup>
+<col width="34%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="38%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11108,6 +11670,12 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="27%"></col>
+<col width="15%"></col>
+<col width="24%"></col>
+<col width="32%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">cwt_result_type_id</th>
@@ -11174,6 +11742,13 @@ div.tocify {
 <div id="age-assessment-categories-as-determined-by-fish-age-laboratory" class="section level5">
 <h5><em>Age assessment categories as determined by fish age laboratory</em></h5>
 <table>
+<colgroup>
+<col width="20%"></col>
+<col width="8%"></col>
+<col width="8%"></col>
+<col width="6%"></col>
+<col width="56%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11243,6 +11818,14 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="14%"></col>
+<col width="17%"></col>
+<col width="15%"></col>
+<col width="20%"></col>
+<col width="19%"></col>
+<col width="12%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">european_age_code</th>
@@ -11256,7 +11839,7 @@ div.tocify {
 <tbody>
 <tr class="odd">
 <td align="left">0.0</td>
-<td align="left">1₁</td>
+<td align="left">11</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -11264,7 +11847,7 @@ div.tocify {
 </tr>
 <tr class="even">
 <td align="left">0.1</td>
-<td align="left">2₁</td>
+<td align="left">21</td>
 <td align="right">0</td>
 <td align="right">1</td>
 <td align="right">1</td>
@@ -11272,7 +11855,7 @@ div.tocify {
 </tr>
 <tr class="odd">
 <td align="left">1.0</td>
-<td align="left">2₂</td>
+<td align="left">22</td>
 <td align="right">1</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -11280,7 +11863,7 @@ div.tocify {
 </tr>
 <tr class="even">
 <td align="left">0.2</td>
-<td align="left">3₁</td>
+<td align="left">31</td>
 <td align="right">0</td>
 <td align="right">2</td>
 <td align="right">2</td>
@@ -11288,7 +11871,7 @@ div.tocify {
 </tr>
 <tr class="odd">
 <td align="left">2.0</td>
-<td align="left">3₃</td>
+<td align="left">33</td>
 <td align="right">2</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -11296,7 +11879,7 @@ div.tocify {
 </tr>
 <tr class="even">
 <td align="left">0.3</td>
-<td align="left">4₁</td>
+<td align="left">41</td>
 <td align="right">0</td>
 <td align="right">3</td>
 <td align="right">3</td>
@@ -11304,7 +11887,7 @@ div.tocify {
 </tr>
 <tr class="odd">
 <td align="left">3.0</td>
-<td align="left">4₄</td>
+<td align="left">44</td>
 <td align="right">3</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -11312,7 +11895,7 @@ div.tocify {
 </tr>
 <tr class="even">
 <td align="left">0.4</td>
-<td align="left">5₁</td>
+<td align="left">51</td>
 <td align="right">0</td>
 <td align="right">4</td>
 <td align="right">4</td>
@@ -11328,6 +11911,13 @@ div.tocify {
 <div id="individual-fish-length-measurements-can-be-multiple-per-fish" class="section level5">
 <h5><em>Individual fish length measurements (can be multiple per fish)</em></h5>
 <table>
+<colgroup>
+<col width="29%"></col>
+<col width="13%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="39%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11374,6 +11964,13 @@ div.tocify {
 <div id="types-of-length-measurements" class="section level5">
 <h5><em>Types of length measurements</em></h5>
 <table>
+<colgroup>
+<col width="32%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="39%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11408,6 +12005,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="39%"></col>
+<col width="18%"></col>
+<col width="41%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">fish_length_measurement_type_id</th>
@@ -11523,6 +12125,13 @@ div.tocify {
 <div id="status-of-redds-new-old-but-still-visible-etc." class="section level5">
 <h5><em>Status of redds (new, old but still visible, etc.)</em></h5>
 <table>
+<colgroup>
+<col width="29%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="43%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11564,6 +12173,12 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="14%"></col>
+<col width="6%"></col>
+<col width="12%"></col>
+<col width="65%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">redd_status_id</th>
@@ -11580,42 +12195,48 @@ div.tocify {
 <td align="left">Combined count of visible new and old redds. Primarily used when it is not practical to separate new from previously counted redds, such as during aerial surveys.</td>
 </tr>
 <tr class="even">
+<td align="left">b8f9b4b9-664e-437d-a54c-40e33e42428b</td>
+<td align="left">FP</td>
+<td align="left">Previous redd, flag pulled</td>
+<td align="left">Previously observed redd that has had the flag pulled. Redd may still be visible but will no longer be tracked</td>
+</tr>
+<tr class="odd">
 <td align="left">281dc7bd-f6b6-49d1-b74e-2b2f95a567d3</td>
 <td align="left">NO</td>
 <td align="left">Previous redd, status unknown</td>
 <td align="left">Redd not observed. Possibly due to a missing flag, a data collection error, or the redd having been obscured.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">45fda25c-9120-406c-b159-2aead75623c0</td>
 <td align="left">NR</td>
 <td align="left">New redd</td>
 <td align="left">Bright, fresh, new redd that is encountered for the first time during a survey.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">9247b24e-accb-4a43-9420-53964fea645e</td>
 <td align="left">NV</td>
 <td align="left">Previous redd, not visible</td>
 <td align="left">Previously observed redd that is no longer visible; if it were observed for the first time it would not be classified as a redd.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">68ce125b-dfd6-4f62-ab9e-91440faab0a5</td>
 <td align="left">OR</td>
 <td align="left">Old redd</td>
 <td align="left">Count of old redds. Primarily used for surveys where counts of new and old redds are tallied, but not redd-life tracking is intended.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">a9a75d00-7c64-429c-abf0-37ed6a3f19f1</td>
 <td align="left">SV</td>
 <td align="left">Previous redd, still visible</td>
 <td align="left">Previously observed redd that is still visible; if it were observed for the first time it would still be classified as a redd.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">71156bae-2a9d-4974-8ec4-6ca374cc92d0</td>
 <td align="left">VM</td>
 <td align="left">Previous redd, still measurable</td>
 <td align="left">Previously observed redd that is still visible and measurable.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">d485f11f-3a4f-4c97-a466-571fc01d9b15</td>
 <td align="left">VU</td>
 <td align="left">Previous redd, not measurable</td>
@@ -11631,6 +12252,13 @@ div.tocify {
 <div id="assessment-of-redd-observation-probably-redd-test-dig-etc." class="section level5">
 <h5><em>Assessment of redd observation (probably redd, test dig, etc.)</em></h5>
 <table>
+<colgroup>
+<col width="30%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="44%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11683,7 +12311,14 @@ div.tocify {
 <h3>redd_confidence_type_lut</h3>
 <div id="assessment-categories-for-redd-observation-probably-redd-test-dig-etc." class="section level5">
 <h5><em>Assessment categories for redd observation (probably redd, test dig, etc.)</em></h5>
-<table>
+<table style="width:100%;">
+<colgroup>
+<col width="32%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="40%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11718,6 +12353,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="11%"></col>
+<col width="10%"></col>
+<col width="77%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">redd_confidence_type_id</th>
@@ -11747,11 +12387,16 @@ div.tocify {
 <td align="left">Observer did not record any determination of redd confidence</td>
 </tr>
 <tr class="odd">
+<td align="left">d70b5c2c-e9eb-44c5-baa7-b120d97b4cb2</td>
+<td align="left">Possible</td>
+<td align="left">A closed area of about the right size and appearance from a distance, but does not have a definite pit or tail spill. This could be caused by stream hydraulics, by the tentative digging of spawners (false or test dig) or by wading, anglers, etc.</td>
+</tr>
+<tr class="even">
 <td align="left">cbd29c8f-cfca-410d-a269-1100a7565dd5</td>
 <td align="left">Probably redd</td>
 <td align="left">Based on observer judgement, determined to be likely redd</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">6bedb16c-dc43-4fc3-a9a6-c54da2b6e9bd</td>
 <td align="left">Test dig</td>
 <td align="left">Based on observer judgement, determined to be test dig. Definitely not a redd.</td>
@@ -11765,6 +12410,13 @@ div.tocify {
 <div id="status-of-redd-assessment-preliminary-final-etc." class="section level5">
 <h5><em>Status of redd assessment (preliminary, final, etc.)</em></h5>
 <table>
+<colgroup>
+<col width="32%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="40%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11821,6 +12473,13 @@ div.tocify {
 <div id="types-of-substrate-associated-with-redds" class="section level5">
 <h5><em>Types of substrate associated with redds</em></h5>
 <table>
+<colgroup>
+<col width="19%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="8%"></col>
+<col width="52%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11874,6 +12533,13 @@ div.tocify {
 <div id="ranking-of-substrate-types-present-at-redd-site-primary-secondary-etc" class="section level5">
 <h5><em>Ranking of substrate types present at redd site (primary, secondary, etc)</em></h5>
 <table>
+<colgroup>
+<col width="32%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="7%"></col>
+<col width="40%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -11908,6 +12574,11 @@ div.tocify {
 </tbody>
 </table>
 <table>
+<colgroup>
+<col width="35%"></col>
+<col width="32%"></col>
+<col width="32%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">substrate_level_id</th>
@@ -12025,6 +12696,13 @@ div.tocify {
 <div id="data-for-individual-redd" class="section level5">
 <h5><em>Data for individual redd</em></h5>
 <table>
+<colgroup>
+<col width="27%"></col>
+<col width="13%"></col>
+<col width="8%"></col>
+<col width="7%"></col>
+<col width="43%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">Column name</th>
@@ -12267,6 +12945,49 @@ $(document).ready(function () {
 });
 
 
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
 </script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
